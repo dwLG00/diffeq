@@ -6,8 +6,10 @@ def function_plot(f, start, end, n):
 	l = [f(v) for v in x]
 	return x, l
 
-def riemann(f, start, incr):
-	'''Generates integral function from f with a starting point and a set increment'''
+def riemann(f, start, subdiv):
+	'''Generates integral function from f with a starting point and number of subdivisions'''
+
+	'''
 
 	def inner_function(x):
 		if x == start:
@@ -28,6 +30,34 @@ def riemann(f, start, incr):
 			return s
 
 	return inner_function
+	'''
+
+	def inner_function(x):
+		width = abs(x - start)
+		incr = width / subdiv
+
+		if x == start:
+			return 0
+
+		s = 0
+
+		if x > start:
+			for i in range(subdiv):
+				cval = f(start + i*incr)
+				nextval = f(start + (i+1)*incr)
+				trapezoid = (cval + nextval) * incr / 2
+				s += trapezoid
+		elif x < start:
+			for i in range(subdiv):
+				cval = f(x + i*incr)
+				nextval = f(x + (i+1)*incr)
+				trapezoid = (cval + nextval) * incr / 2
+				s += trapezoid
+			s *= -1
+
+		return s
+
+	return inner_function
 
 def flatten(f, a, b, slices):
 	incr = (b - a)/slices
@@ -44,10 +74,10 @@ def flatten(f, a, b, slices):
 
 	return func
 
-def picard(F, t0, x0, steps=5, riemann_incr=0.1, flatten_range=5):
+def picard(F, t0, x0, steps=5, riemann_subdiv=100, flatten_range=5):
 	#F(t, x)
 
-	flatten_slices = int(2*flatten_range/riemann_incr)
+	flatten_slices = 2*riemann_subdiv
 
 	xfuncs = [lambda t: x0]
 
@@ -55,7 +85,7 @@ def picard(F, t0, x0, steps=5, riemann_incr=0.1, flatten_range=5):
 		xfunc = xfuncs[-1]
 
 		new_F = lambda t: F(t, xfunc(t))
-		new_F_integral = riemann(new_F, t0, riemann_incr)
+		new_F_integral = riemann(new_F, t0, riemann_subdiv)
 		xfunc_new = lambda t: x0 + new_F_integral(t)
 		xfunc_new_flattened = flatten(xfunc_new, t0-flatten_range, t0+flatten_range, flatten_slices)
 		xfuncs.append(xfunc_new_flattened)
